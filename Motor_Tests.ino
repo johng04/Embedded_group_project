@@ -1,15 +1,19 @@
-#define m_one_a 1
-#define m_one_b 2
-#define m_two_a 3
-#define m_two_b 4
+#define m_one_a 10 //front left
+#define m_one_b 11 //front right
+#define m_two_a 12 //back left
+#define m_two_b 13 //back right
 
 void setup() {
-  
+  analogWrite(m_one_a, 100);
+  analogWrite(m_one_b, 100);
+  analogWrite(m_two_a, 100);
+  analogWrite(m_two_b, 100);
 }
 
 void loop() {
-  digitalWrite(m_one_a, HIGH);
-  digitalWrite(m_one_b, LOW);
-  digitalWrite(m_two_a, LOW);
-  digitalWrite(m_two_b, LOW);
+  delay(5000);
+  analogWrite(m_one_a, 0);
+  analogWrite(m_one_b, 0);
+  analogWrite(m_two_a, 0);
+  analogWrite(m_two_b, 0);
 }
