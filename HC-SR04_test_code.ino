@@ -12,7 +12,7 @@ void setup() {
 void loop() {
   digitalWrite(triggerPin, LOW);
   
-  delayMicroseconds(2);
+  delay(2);
   //pulse trigger pin for 10 micros
   digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
@@ -27,6 +27,6 @@ void loop() {
   }
   while(echoPin != HIGH);
   
-  distance = (msTimeTaken/2000000) * 343;
+  distance = (msTimeTaken/2000000) * 343; //can be improved with temperature or humidity sensor??
   Serial.println(distance * 100, 2);
 }
