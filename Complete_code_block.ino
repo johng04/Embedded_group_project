@@ -23,7 +23,8 @@ Servo steering;
 // Integers to represent values from sticks and pots
 int ch3Value; //motor
 int ch1Value; //steering
-bool ch6Value;
+bool mode;
+bool push;
 // Read the number of a specified channel and convert to the range provided.
 // If the channel is off, return the default value
 int readChannel(int channelInput, int minLimit, int maxLimit, int defaultValue){
@@ -39,7 +40,6 @@ bool readSwitch(byte channelInput, bool defaultValue){
 //1 or 0 if black line is detected Left or Right.
 bool line_R;
 bool line_L;
-
 int speed;
 
 void setFrontSpeed(int x){
@@ -74,6 +74,7 @@ void shallowRight(){
 float distance;
 int duration;
 
+
 void setup() {
   Serial.begin(9600);
 //inputs
@@ -88,11 +89,13 @@ void setup() {
   pinMode(frontMotor, OUTPUT);//Front motor
   pinMode(backMotor, OUTPUT);//Back motor
   steering.attach(servoPin);//Attaches steering servo to pin servoPin (5)
+  push = 0;
 }
 
-void loop() {
-  ch6Value = readSwitch(CH6, false);
 
+
+void loop() {
+  mode = readSwitch(CH6, false);
   //Automatic
   while(mode == 0){
 
@@ -133,9 +136,29 @@ void loop() {
 
       distance = distance * 100;
     if(distance < 2){
-      mode = 2;
+      push = 1;
+    }
+    else{continue;}
+
+    while(push == 1){
+      straight();
+      setFrontSpeed(0);
+      setBackSpeed(0);
+      delay(1000);
+      setFrontSpeed(80);
+      setBackSpeed(80);
+
+      if(line_L == 1 || line_R == 1){
+        analogWrite(backMotor, -80);
+        analogWrite(frontMotor, -80);
+        delay(2000);
+        exit(0);
+      }
     }
   }
+
+
+
     //Manual controll
     while(mode == 1){
   //motor control
@@ -152,13 +175,6 @@ void loop() {
     steering.write(angle);
     }   
 
-    while(mode == 2){
-      straight();
-      setFrontSpeed(0);
-      setBackSpeed(0);
-      delay(1000);
-      setFrontSpeed(100);
-      setBackSpeed(100);
-    }
+    
 }
 
