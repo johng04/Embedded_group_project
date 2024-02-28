@@ -71,7 +71,8 @@ void shallowRight(){
   steering.write(113);
 }
 
-
+float distance;
+int duration;
 
 void setup() {
   Serial.begin(9600);
@@ -80,11 +81,13 @@ void setup() {
   pinMode(d_in_L, INPUT); //IR sensor
   pinMode(CH3, INPUT); //Speed
   pinMode(CH1, INPUT); //Remote stering
+  pinMode(echoPin, INPUT);//US sensor
 //outputs
-  pinMode(servoPin, OUTPUT);
-  pinMode(frontMotor, OUTPUT);
-  pinMode(backMotor, OUTPUT);
-  steering.attach(servoPin);
+  pinMode(triggerPin, OUTPUT);//US sensor
+  pinMode(servoPin, OUTPUT);//Servo
+  pinMode(frontMotor, OUTPUT);//Front motor
+  pinMode(backMotor, OUTPUT);//Back motor
+  steering.attach(servoPin);//Attaches steering servo to pin servoPin (5)
 }
 
 void loop() {
@@ -92,8 +95,10 @@ void loop() {
 
   //Automatic
   while(mode == 0){
+
   line_R = digitalRead(d_in_R);
   line_L = digitalRead(d_in_L);
+  
     if(line_L == LOW && line_R == LOW ){
       straight();
       setFrontSpeed(100);
@@ -114,22 +119,46 @@ void loop() {
       setFrontSpeed(0);
       setBackSpeed(0);
     }
+      digitalWrite(triggerPin, LOW); 
+      delayMicroseconds(2);
+
+      //pulse trigger pin for 10 micros
+      digitalWrite(triggerPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(triggerPin, LOW);
+
+      //start clock at 0 to
+      duration = pulseIn(echoPin, HIGH);
+      distance = (duration * 0.0343)/2;
+
+      distance = distance * 100;
+    if(distance < 2){
+      mode = 2;
+    }
   }
     //Manual controll
     while(mode == 1){
   //motor control
-  ch3Value = readChannel(CH3, -100, 100, 0);
-  int speed=map(ch3Value,-100,100, 0,255);
-  analogWrite(frontMotor, speed);
-  analogWrite(backMotor, speed);
-  //steering control
-  ch1Value = readChannel(CH1, -100, 100, 0);
-  int angle=map(ch1Value,-100,100, 0,180); //0 left default; 90 forward; 180 right
- if(angle<70 OR angle >110){
-  analogWrite(backMotor, 0.8*speed);
- }
-  steering.write(angle);
+      ch3Value = readChannel(CH3, -100, 100, 0);
+      int speed=map(ch3Value,-100,100, 0,255);
+      analogWrite(frontMotor, speed);
+      analogWrite(backMotor, speed);
+      //steering control
+      ch1Value = readChannel(CH1, -100, 100, 0);
+      int angle=map(ch1Value,-100,100, 0,180); //0 left default; 90 forward; 180 right
+      if(angle<70 OR angle >110){
+        analogWrite(backMotor, 0.8*speed);
+      }
+    steering.write(angle);
     }   
+
+    while(mode == 2){
+      straight();
+      setFrontSpeed(0);
+      setBackSpeed(0);
+      delay(1000);
+      setFrontSpeed(100);
+      setBackSpeed(100);
+    }
 }
 
-  
