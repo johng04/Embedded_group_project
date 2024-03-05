@@ -100,31 +100,49 @@ void loop() {
   mode = readSwitch(CH6, false);
   //Automatic
   while(mode == 0){
+    line_R = digitalRead(d_in_R);
+    line_L = digitalRead(d_in_L);
 
-  line_R = digitalRead(d_in_R);
-  line_L = digitalRead(d_in_L);
-  
-    if(line_L < blackVal && line_R < blackVal){
-      straight();
-      setFrontSpeed(100);
-      setBackSpeed(100);
-      
+    while(push == 0){
+        if(line_L < blackVal && line_R < blackVal){
+          straight();
+          setFrontSpeed(100);
+          setBackSpeed(100);
+          
+        }
+        if(line_L < blackVal && line_R >= blackVal){
+          shallowRight();
+          setFrontSpeed(80);
+          setBackSpeed(75);
+        }
+        if(line_L >= HIGH && line_R < blackVal){
+          shallowLeft();
+          setFrontSpeed(80);
+          setBackSpeed(75);
+        }
+        if(line_L >= blackVal && line_R >= blackVal){
+          straight();
+          setFrontSpeed(20);
+          setBackSpeed(20);
+        }
     }
-    if(line_L < blackVal && line_R >= blackVal){
-      shallowRight();
-      setFrontSpeed(80);
-      setBackSpeed(75);
-    }
-    if(line_L >= HIGH && line_R < blackVal){
-      shallowLeft();
-      setFrontSpeed(80);
-      setBackSpeed(75);
-    }
-    if(line_L >= blackVal && line_R >= blackVal){
-      straight();
-      setFrontSpeed(20);
-      setBackSpeed(20);
-    }
+        while(push == 1){
+          straight();
+          setFrontSpeed(0);
+          setBackSpeed(0);
+          delay(1000);
+          setFrontSpeed(80);
+          setBackSpeed(80);
+
+          if(line_L >= blackVal || line_R >= blackVal){
+            analogWrite(backMotor, -80);
+            analogWrite(frontMotor, -80);
+            delay(2000);
+            exit(0);
+          }
+        }
+  }
+    //ULTRASONIC TRIGGER
       digitalWrite(triggerPin, LOW); 
       delayMicroseconds(2);
 
@@ -141,26 +159,7 @@ void loop() {
     if(distance < 2){
       push = 1;
     }
-    else{continue;}
-
-    while(push == 1){
-      straight();
-      setFrontSpeed(0);
-      setBackSpeed(0);
-      delay(1000);
-      setFrontSpeed(80);
-      setBackSpeed(80);
-
-      if(line_L >= blackVal || line_R >= blackVal){
-        analogWrite(backMotor, -80);
-        analogWrite(frontMotor, -80);
-        delay(2000);
-        exit(0);
-      }
-    }
-  }
-
-
+  
 
     //Manual controll
     while(mode == 1){
