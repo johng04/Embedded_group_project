@@ -3,8 +3,8 @@
 #define servoPin 5
 Servo steering;
 //IR SENSOR DEFINES
-#define d_in_L A15
-#define d_in_R A14
+#define a_in_L A15
+#define a_in_R A14
 
 //MOTOR DEFINES
 #define frontMotor 11
@@ -82,8 +82,8 @@ int duration;
 void setup() {
   Serial.begin(9600);
 //inputs
-  pinMode(d_in_R, INPUT); //IR sensor
-  pinMode(d_in_L, INPUT); //IR sensor
+  pinMode(a_in_R, INPUT); //IR sensor
+  pinMode(a_in_L, INPUT); //IR sensor
   pinMode(CH3, INPUT); //Speed
   pinMode(CH1, INPUT); //Remote stering
   pinMode(echoPin, INPUT);//US sensor
@@ -99,8 +99,8 @@ void setup() {
 
 void loop() {
   mode = readSwitch(CH6, false);
-  line_R = analogRead(d_in_R);
-  line_L = analogRead(d_in_L);
+  line_R = analogRead(a_in_R);
+  line_L = analogRead(a_in_L);
   //Automatic
   while(mode == 0){
     
