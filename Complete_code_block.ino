@@ -3,13 +3,12 @@
 #define servoPin 5
 Servo steering;
 //IR SENSOR DEFINES
-#define d_in_L 24
-#define d_in_R 25
+#define d_in_L A15
+#define d_in_R A14
 
 //MOTOR DEFINES
 #define frontMotor 11
 #define backMotor 10
-#define VOLTAGE_INPUT A0 
 
 //ULTRASONIC SENSOR PINS
 #define triggerPin 22
@@ -38,17 +37,20 @@ bool readSwitch(byte channelInput, bool defaultValue){
   return (ch > 50);
 }
 //1 or 0 if black line is detected Left or Right.
-bool line_R;
-bool line_L;
+int line_R;
+int line_L;
+
+int blackVal = 500;
+
 int speed;
 
 void setFrontSpeed(int x){
-  int mappedVal = map(x, 0, 100, 0, 150);
+  int mappedVal = map(x, -100, 100, -150, 150);
   analogWrite(frontMotor, mappedVal);
 }
 
 void setBackSpeed(int x){
-  int mappedVal = map(x,0,100,0,150);
+  int mappedVal = map(x,-100,100,-150,150);
   analogWrite(backMotor, mappedVal);
 }
 void setAngle(int x){
@@ -56,19 +58,21 @@ void setAngle(int x){
   steering.write(mappedVal);
 }
 void straight(){
-  steering.write(90);
+  setAngle(0);
+
 }
 void hardLeft(){
-  steering.write(45);
+  setAngle(-45);
+
 } 
 void hardRight(){
-  steering.write(135);
+  steering.write(45);
 } 
 void shallowLeft(){
-  steering.write(67);
+  steering.write(-23);
 } 
 void shallowRight(){
-  steering.write(113);
+  steering.write(23);
 }
 
 float distance;
@@ -90,38 +94,57 @@ void setup() {
   pinMode(backMotor, OUTPUT);//Back motor
   steering.attach(servoPin);//Attaches steering servo to pin servoPin (5)
   push = 0;
+  mode = 0;
 }
-
-
 
 void loop() {
   mode = readSwitch(CH6, false);
+  line_R = analogRead(d_in_R);
+  line_L = analogRead(d_in_L);
   //Automatic
   while(mode == 0){
+    
 
-  line_R = digitalRead(d_in_R);
-  line_L = digitalRead(d_in_L);
-  
-    if(line_L == LOW && line_R == LOW ){
-      straight();
-      setFrontSpeed(100);
-      setBackSpeed(100);
-      
+    while(push == 0){
+        if(line_L < blackVal && line_R < blackVal){
+          straight();
+          setFrontSpeed(100);
+          setBackSpeed(100);
+          
+        }
+        if(line_L < blackVal && line_R >= blackVal){
+          shallowRight();
+          setFrontSpeed(80);
+          setBackSpeed(75);
+        }
+        if(line_L >= HIGH && line_R < blackVal){
+          shallowLeft();
+          setFrontSpeed(80);
+          setBackSpeed(75);
+        }
+        if(line_L >= blackVal && line_R >= blackVal){
+          straight();
+          setFrontSpeed(20);
+          setBackSpeed(20);
+        }
     }
-    if(line_L == LOW && line_R == HIGH){
-      shallowRight();
-      setFrontSpeed(80);
-      setBackSpeed(75);
-    }
-    if(line_L == HIGH && line_R == LOW){
-      shallowLeft();
-      setFrontSpeed(80);
-      setBackSpeed(75);
-    }
-    if(line_L == HIGH && line_R == HIGH){
-      setFrontSpeed(0);
-      setBackSpeed(0);
-    }
+        while(push == 1){
+          straight();
+          setFrontSpeed(0);
+          setBackSpeed(0);
+          delay(1000);
+          setFrontSpeed(80);
+          setBackSpeed(80);
+
+          if(line_L >= blackVal || line_R >= blackVal){
+            analogWrite(backMotor, -80);
+            analogWrite(frontMotor, -80);
+            delay(2000);
+            exit(0);
+          }
+        }
+  }
+    //ULTRASONIC TRIGGER
       digitalWrite(triggerPin, LOW); 
       delayMicroseconds(2);
 
@@ -135,29 +158,11 @@ void loop() {
       distance = (duration * 0.0343)/2;
 
       distance = distance * 100;
+      Serial.println(distance);
     if(distance < 2){
       push = 1;
     }
-    else{continue;}
-
-    while(push == 1){
-      straight();
-      setFrontSpeed(0);
-      setBackSpeed(0);
-      delay(1000);
-      setFrontSpeed(80);
-      setBackSpeed(80);
-
-      if(line_L == 1 || line_R == 1){
-        analogWrite(backMotor, -80);
-        analogWrite(frontMotor, -80);
-        delay(2000);
-        exit(0);
-      }
-    }
-  }
-
-
+  
 
     //Manual controll
     while(mode == 1){
@@ -169,7 +174,7 @@ void loop() {
       //steering control
       ch1Value = readChannel(CH1, -100, 100, 0);
       int angle=map(ch1Value,-100,100, 0,180); //0 left default; 90 forward; 180 right
-      if(angle<70 OR angle >110){
+      if(angle<70 || angle >110){
         analogWrite(backMotor, 0.8*speed);
       }
     steering.write(angle);
@@ -177,4 +182,3 @@ void loop() {
 
     
 }
-
